@@ -99,7 +99,7 @@ class SimpleEnv(AECEnv):
         state_dim = 0
         for agent in self.world.agents:
             if agent.movable:
-                space_dim = self.world.dim_p * 2 + 2    # updated from +1 to +2 (for lamps actions)
+                space_dim = self.world.dim_p * 2 + 3    # updated from +1 to +3 (for lamps actions and height action)
             elif self.continuous_actions:
                 space_dim = 0
             else:
@@ -156,7 +156,7 @@ class SimpleEnv(AECEnv):
             radius = self.obs_radiuses[self._index_map[agent]]
         return self.scenario.observation(
             self.world.agents[self._index_map[agent]], self.world, radius
-        ).astype(np.float32)
+        )
 
     def state(self):    #   States are not updated according to the observation radius of each agent
         states = tuple(
@@ -190,7 +190,7 @@ class SimpleEnv(AECEnv):
             action = self.current_actions[i]
             scenario_action = []
             if agent.movable:
-                mdim = self.world.dim_p * 2 + 2 #updated to +2 from +1 (for lamp action)
+                mdim = self.world.dim_p * 2 + 3    # updated from +1 to +3 (for lamps actions and height action)
                 if self.continuous_actions:
                     scenario_action.append(action[0:mdim])
                     action = action[mdim:]
@@ -232,6 +232,15 @@ class SimpleEnv(AECEnv):
                         x.accel = 0
                         x.size = 0
 
+        for agent in self.world.agents:
+            for landmark in self.world.landmarks:
+                if agent == landmark:
+                    continue
+                if np.linalg.norm(agent.state.p_pos - landmark.state.p_pos) <= landmark.size and not self.world.dead_list[agent.name]:
+                    self.world.shadow_list[agent.name] = True
+                else:
+                    self.world.shadow_list[agent.name] = False
+
     # set env action for a particular agent
     def _set_action(self, action, agent, action_space, time=None):
         agent.action.u = np.zeros(self.world.dim_p)
@@ -241,6 +250,7 @@ class SimpleEnv(AECEnv):
             # physical action
             agent.action.u = np.zeros(self.world.dim_p)
             agent.action.lamp_change = False
+            agent.action.height_change = False
             if self.continuous_actions:
                 # Process continuous action as in OpenAI MPE
                 agent.action.u[0] += action[0][1] - action[0][2]
@@ -257,6 +267,8 @@ class SimpleEnv(AECEnv):
                     agent.action.u[1] = +1.0
                 if action[0] == 5 and agent.adversary:
                     agent.action.lamp_change = True
+                if action[0] == 6 and agent.adversary:
+                    agent.action.height_change = True
             sensitivity = 5.0
             if agent.accel is not None:
                 sensitivity = agent.accel
@@ -357,6 +369,10 @@ class SimpleEnv(AECEnv):
             if entity.state.lamp:
                 pygame.draw.circle(
                     self.screen, entity.color * 100, (x, y), entity.size * 100
+                )  # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
+            if entity.state.height:
+                pygame.draw.circle(
+                    self.screen, entity.color * 200, (x, y), entity.size * 200, 1
                 )  # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
             assert (
                 0 < x < self.width and 0 < y < self.height

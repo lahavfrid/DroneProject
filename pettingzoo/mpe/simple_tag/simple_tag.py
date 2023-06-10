@@ -81,8 +81,7 @@ class raw_env(SimpleEnv, EzPickle):
         continuous_actions=False,
         render_mode=None,
         obs_dict=None,
-        lamp_improvement_factor=1.5,
-        landmark_distrubtion_factor=0.5,
+        factor_dict = {},
     ):
         EzPickle.__init__(
             self,
@@ -94,8 +93,8 @@ class raw_env(SimpleEnv, EzPickle):
             render_mode=render_mode,
         )
         scenario = Scenario()
-        world = scenario.make_world(num_good, num_adversaries, num_obstacles, \
-                                    lamp_improvement_factor, landmark_distrubtion_factor)
+        factor_dict = factor_dict_reset(factor_dict)
+        world = scenario.make_world(num_good, num_adversaries, num_obstacles, factor_dict)
         SimpleEnv.__init__(
             self,
             scenario=scenario,
@@ -111,14 +110,26 @@ class raw_env(SimpleEnv, EzPickle):
 env = make_env(raw_env)
 parallel_env = parallel_wrapper_fn(env)
 
+def factor_dict_reset(factor_dict):
+    if not ("landmark_interference_factor" in factor_dict):
+        factor_dict["landmark_interference_factor"] = 1.0
+    if not ("lamp_improvement_factor" in factor_dict):
+        factor_dict["lamp_improvement_factor"] = 1.0
+    if not ("shadow_interference_factor" in factor_dict):
+        factor_dict["shadow_interference_factor"] = 1.0
+    if not ("height_adversary_factor" in factor_dict):
+        factor_dict["height_adversary_factor"] = 1.0
+    if not ("height_non_adversary_factor" in factor_dict):
+        factor_dict["height_non_adversary_factor"] = 1.0
+    if not ("height_other_factor" in factor_dict):
+        factor_dict["height_other_factor"] = 1.0
+    return factor_dict
 
 class Scenario(BaseScenario):
-    def make_world(self, num_good=1, num_adversaries=3, num_obstacles=2, \
-                   lamp_improvement_factor=1.5, landmark_distrubtion_factor=0.5):
+    def make_world(self, num_good=1, num_adversaries=3, num_obstacles=2, factor_dict = {}):
         world = World()
         # set any world properties first
-        world.lamp_improvement_factor = lamp_improvement_factor
-        world.landmark_distrubtion_factor = landmark_distrubtion_factor
+        world.factor_dict = factor_dict
         world.dim_c = 2
         num_good_agents = num_good
         num_adversaries = num_adversaries
@@ -127,6 +138,7 @@ class Scenario(BaseScenario):
         # add agents
         world.agents = [Agent() for i in range(num_agents)]
         world.dead_list = {agent.name: False for agent in world.agents}
+        world.shadow_list = {agent.name: False for agent in world.agents}
         for i, agent in enumerate(world.agents):
             agent.adversary = True if i < num_adversaries else False
             base_name = "adversary" if agent.adversary else "agent"
@@ -165,6 +177,7 @@ class Scenario(BaseScenario):
             agent.state.c = np.zeros(world.dim_c)
             agent.state.direction = np_random.uniform(0, 360)
         world.dead_list = {agent.name: False for agent in world.agents}
+        world.shadow_list = {agent.name: False for agent in world.agents}
         for i, landmark in enumerate(world.landmarks):
             if not landmark.boundary:
                 landmark.state.p_pos = np_random.uniform(-0.9, +0.9, world.dim_p)
@@ -268,24 +281,38 @@ class Scenario(BaseScenario):
 
     def observation(self, agent, world, obs_radius = 2):
         # get positions of all entities in this agent's reference frame, if the entity is in the agents observation radius
-        agents_pos = []
-        curr_obs_improvement_factor = 1.0
+        agents_pos = [agent.state.lamp]
+        obs_improvement_factor = 1.0
 
         # impair vision if inside of a landmark
         for landmark in world.landmarks:
             if np.linalg.norm(agent.state.p_pos - landmark.state.p_pos) <= landmark.size:
-                curr_obs_improvement_factor = world.landmark_distrubtion_factor
+                obs_improvement_factor = world.factor_dict["landmark_interference_factor"]
                 break
 
         # get vision of all other agents in sight (landmark doesn't count as an agent)
         for other in world.agents:
+            curr_obs_improvement_factor = obs_improvement_factor
             relative_distance = agent.state.p_pos - other.state.p_pos
 
+            # lamp and shadow updates
             if agent.state.lamp: # improved vision by lamp assistance
-                curr_obs_improvement_factor = world.lamp_improvement_factor
-            if np.linalg.norm(relative_distance) <= obs_radius * curr_obs_improvement_factor:
-                agents_pos.append(relative_distance)
+                curr_obs_improvement_factor *= world.factor_dict["lamp_improvement_factor"]
+            if world.shadow_list[other.name] and other.state.lamp == False:
+                curr_obs_improvement_factor *= world.factor_dict["shadow_interference_factor"]
 
-        return np.concatenate(
-            agents_pos
-        )
+            # height updates
+            if agent.state.height:
+                if other.adversary and other.state.height==False:
+                    obs_improvement_factor = world.factor_dict["height_adversary_factor"]
+                else:
+                    obs_improvement_factor = world.factor_dict["height_non_adversary_factor"]
+            elif other.state.height:
+                obs_improvement_factor = world.factor_dict["height_other_factor"]
+
+
+            if np.linalg.norm(relative_distance) <= obs_radius * curr_obs_improvement_factor:
+                agents_pos.append((other.adversary, relative_distance))
+
+
+        return agents_pos

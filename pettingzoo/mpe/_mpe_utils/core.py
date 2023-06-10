@@ -7,10 +7,12 @@ class EntityState:  # physical/external base state of all entities
         self.p_pos = None
         # physical velocity
         self.p_vel = None
-        #direction
+        # direction
         self.direction = None
-        #lamp activation
+        # lamp activation
         self.lamp = False
+        # binary height
+        self.height = False
 
 
 class AgentState(
@@ -28,6 +30,7 @@ class Action:  # action of the agent
         self.u = None
         self.rotation = None
         self.lamp_change = False
+        self.height_change = False
         # communication action
         self.c = None
 
@@ -62,6 +65,7 @@ class Entity:  # properties and state of physical world entity
 class Landmark(Entity):  # properties of landmark entities
     def __init__(self):
         super().__init__()
+        self.collide = False
 
 
 class Agent(Entity):  # properties of agent entities
@@ -92,6 +96,7 @@ class World:  # multi-agent world
         # list of agents and entities (can change at execution-time!)
         self.agents = []
         self.dead_list = {}
+        self.shadow_list = {}
         self.landmarks = []
         # communication channel dimensionality
         self.dim_c = 0
@@ -106,8 +111,7 @@ class World:  # multi-agent world
         # contact response parameters
         self.contact_force = 1e2
         self.contact_margin = 1e-3
-        self.lamp_improvement_factor = 1.5
-        self.landmark_distrubtion_factor = 0.5
+        self.factor_dict = {}
 
     # return all entities in the world
     @property
@@ -137,8 +141,10 @@ class World:  # multi-agent world
         p_force = self.apply_environment_force(p_force)
         # apply lamp action
         lamp_activation = self.lamp_action()
+        # apply height action
+        height_activation = self.height_action()
         # integrate physical state
-        self.integrate_state(p_force, lamp_activation)
+        self.integrate_state(p_force, lamp_activation, height_activation)
         # update agent state
         for agent in self.agents:
             self.update_agent_state(agent)
@@ -151,6 +157,13 @@ class World:  # multi-agent world
                 lamp_activation[i] = agent.action.lamp_change
         return lamp_activation
 
+    # gather height activations
+    def height_action(self):
+        height_activation = [False] * len(self.entities)
+        for i, agent in enumerate(self.agents):
+            if agent.movable:
+                height_activation[i] = agent.action.height_change
+        return height_activation
 
     # gather agent action forces
     def apply_action_force(self, p_force):
@@ -184,7 +197,7 @@ class World:  # multi-agent world
         return p_force
 
     # integrate physical state
-    def integrate_state(self, p_force, lamp_activation):
+    def integrate_state(self, p_force, lamp_activation, height_activation):
         for i, entity in enumerate(self.entities):
             if not entity.movable:
                 continue
@@ -192,6 +205,8 @@ class World:  # multi-agent world
             entity.state.p_vel = entity.state.p_vel * (1 - self.damping)
             if lamp_activation[i]:
                 entity.state.lamp = not entity.state.lamp
+            if height_activation[i]:
+                entity.state.height = not entity.state.height
             if p_force[i] is not None:
                 entity.state.p_vel += (p_force[i] / entity.mass) * self.dt
             if entity.max_speed is not None:

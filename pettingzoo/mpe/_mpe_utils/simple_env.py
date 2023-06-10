@@ -99,7 +99,7 @@ class SimpleEnv(AECEnv):
         state_dim = 0
         for agent in self.world.agents:
             if agent.movable:
-                space_dim = self.world.dim_p * 2 + 3    # updated from +1 to +3 (for lamps actions and height action)
+                space_dim = self.world.dim_p * 2 + 4    # updated from +1 to +4 (for lamp, height and color action)
             elif self.continuous_actions:
                 space_dim = 0
             else:
@@ -190,7 +190,7 @@ class SimpleEnv(AECEnv):
             action = self.current_actions[i]
             scenario_action = []
             if agent.movable:
-                mdim = self.world.dim_p * 2 + 3    # updated from +1 to +3 (for lamps actions and height action)
+                mdim = self.world.dim_p * 2 + 4    # updated from +1 to +4 (for lamp, height and color action)
                 if self.continuous_actions:
                     scenario_action.append(action[0:mdim])
                     action = action[mdim:]
@@ -251,6 +251,7 @@ class SimpleEnv(AECEnv):
             agent.action.u = np.zeros(self.world.dim_p)
             agent.action.lamp_change = False
             agent.action.height_change = False
+            agent.action.color_change = False
             if self.continuous_actions:
                 # Process continuous action as in OpenAI MPE
                 agent.action.u[0] += action[0][1] - action[0][2]
@@ -269,6 +270,8 @@ class SimpleEnv(AECEnv):
                     agent.action.lamp_change = True
                 if action[0] == 6 and agent.adversary:
                     agent.action.height_change = True
+                if action[0] == 7 and agent.adversary:
+                    agent.action.color_change = True
             sensitivity = 5.0
             if agent.accel is not None:
                 sensitivity = agent.accel
@@ -360,8 +363,12 @@ class SimpleEnv(AECEnv):
             y = (y / cam_range) * self.height // 2 * 0.9
             x += self.width // 2
             y += self.height // 2
+            if entity.movable and entity.adversary:
+                curr_color = self.world.colors_for_agent[entity.state.color_index]
+            else:
+                curr_color = entity.color
             pygame.draw.circle(
-                self.screen, entity.color * 200, (x, y), entity.size * 350
+                self.screen, curr_color * 200, (x, y), entity.size * 350
             )  # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
             pygame.draw.circle(
                 self.screen, (0, 0, 0), (x, y), entity.size * 350, 1
@@ -372,7 +379,7 @@ class SimpleEnv(AECEnv):
                 )  # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
             if entity.state.height:
                 pygame.draw.circle(
-                    self.screen, entity.color * 200, (x, y), entity.size * 200, 1
+                    self.screen, entity.color * 50, (x, y), entity.size * 200, 1
                 )  # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
             assert (
                 0 < x < self.width and 0 < y < self.height

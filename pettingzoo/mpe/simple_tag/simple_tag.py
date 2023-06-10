@@ -81,7 +81,8 @@ class raw_env(SimpleEnv, EzPickle):
         continuous_actions=False,
         render_mode=None,
         obs_dict=None,
-        factor_dict = {},
+        factor_dict={},
+        num_of_possible_colors_for_agent=0,
     ):
         EzPickle.__init__(
             self,
@@ -94,7 +95,8 @@ class raw_env(SimpleEnv, EzPickle):
         )
         scenario = Scenario()
         factor_dict = factor_dict_reset(factor_dict)
-        world = scenario.make_world(num_good, num_adversaries, num_obstacles, factor_dict)
+        world = scenario.make_world(num_good, num_adversaries, num_obstacles,
+                                    factor_dict, num_of_possible_colors_for_agent)
         SimpleEnv.__init__(
             self,
             scenario=scenario,
@@ -126,10 +128,16 @@ def factor_dict_reset(factor_dict):
     return factor_dict
 
 class Scenario(BaseScenario):
-    def make_world(self, num_good=1, num_adversaries=3, num_obstacles=2, factor_dict = {}):
+    def make_world(self, num_good=1, num_adversaries=3, num_obstacles=2,
+                   factor_dict = {}, num_of_possible_colors_for_agent=0):
         world = World()
         # set any world properties first
         world.factor_dict = factor_dict
+        if num_of_possible_colors_for_agent <= 0:
+            num_of_possible_colors_for_agent = 1
+        if num_of_possible_colors_for_agent > 5:
+            num_of_possible_colors_for_agent = 5
+        world.num_of_possible_colors_for_agent = num_of_possible_colors_for_agent
         world.dim_c = 2
         num_good_agents = num_good
         num_adversaries = num_adversaries
@@ -303,12 +311,12 @@ class Scenario(BaseScenario):
 
             # height updates
             if agent.state.height:
-                if other.adversary and other.state.height==False:
-                    obs_improvement_factor = world.factor_dict["height_adversary_factor"]
+                if other.adversary:
+                    curr_obs_improvement_factor *= world.factor_dict["height_adversary_factor"]
                 else:
-                    obs_improvement_factor = world.factor_dict["height_non_adversary_factor"]
+                    curr_obs_improvement_factor *= world.factor_dict["height_non_adversary_factor"]
             elif other.state.height:
-                obs_improvement_factor = world.factor_dict["height_other_factor"]
+                curr_obs_improvement_factor *= world.factor_dict["height_other_factor"]
 
 
             if np.linalg.norm(relative_distance) <= obs_radius * curr_obs_improvement_factor:

@@ -13,6 +13,8 @@ class EntityState:  # physical/external base state of all entities
         self.lamp = False
         # binary height
         self.height = False
+        # color index
+        self.color_index = 0
 
 
 class AgentState(
@@ -31,6 +33,7 @@ class Action:  # action of the agent
         self.rotation = None
         self.lamp_change = False
         self.height_change = False
+        self.color_change = False
         # communication action
         self.c = None
 
@@ -112,6 +115,9 @@ class World:  # multi-agent world
         self.contact_force = 1e2
         self.contact_margin = 1e-3
         self.factor_dict = {}
+        self.num_of_possible_colors_for_agent = 1
+        self.colors_for_agent = [np.array([0.85, 0.35, 0.35]), np.array([0.85, 0.85, 0.0]), np.array([0.0, 0.85, 0.85]),
+                                 np.array([0.85, 0.0, 0.85]), np.array([0.85, 0.85, 0.85])]
 
     # return all entities in the world
     @property
@@ -143,8 +149,10 @@ class World:  # multi-agent world
         lamp_activation = self.lamp_action()
         # apply height action
         height_activation = self.height_action()
+        # apply color change
+        color_diff = self.color_change_action()
         # integrate physical state
-        self.integrate_state(p_force, lamp_activation, height_activation)
+        self.integrate_state(p_force, lamp_activation, height_activation, color_diff)
         # update agent state
         for agent in self.agents:
             self.update_agent_state(agent)
@@ -164,6 +172,14 @@ class World:  # multi-agent world
             if agent.movable:
                 height_activation[i] = agent.action.height_change
         return height_activation
+
+    # gather color change actions
+    def color_change_action(self):
+        color_changes = [False] * len(self.entities)
+        for i, agent in enumerate(self.agents):
+            if agent.movable:
+                color_changes[i] = agent.action.color_change
+        return color_changes
 
     # gather agent action forces
     def apply_action_force(self, p_force):
@@ -197,7 +213,7 @@ class World:  # multi-agent world
         return p_force
 
     # integrate physical state
-    def integrate_state(self, p_force, lamp_activation, height_activation):
+    def integrate_state(self, p_force, lamp_activation, height_activation, color_diff):
         for i, entity in enumerate(self.entities):
             if not entity.movable:
                 continue
@@ -207,6 +223,8 @@ class World:  # multi-agent world
                 entity.state.lamp = not entity.state.lamp
             if height_activation[i]:
                 entity.state.height = not entity.state.height
+            if color_diff[i]:
+                entity.state.color_index = (entity.state.color_index + 1) % self.num_of_possible_colors_for_agent
             if p_force[i] is not None:
                 entity.state.p_vel += (p_force[i] / entity.mass) * self.dt
             if entity.max_speed is not None:

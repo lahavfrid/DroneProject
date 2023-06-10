@@ -8,9 +8,9 @@ from pettingzoo.mpe import simple_tag_v3
 
 # Note: The radiuses values are in the range [0, 2]
 my_obs_dict = {10: 2, 5: 2}
-factors = {"height_adversary_factor": 0}
-env = simple_tag_v3.env(render_mode='human', num_good=1, num_adversaries=1, num_obstacles=1, max_cycles=1000,\
-                        obs_dict=my_obs_dict, factor_dict = factors)
+factors = {"height_other_factor": 0}
+env = simple_tag_v3.env(render_mode='human', num_good=20, num_adversaries=20, num_obstacles=1, max_cycles=1000,\
+                        obs_dict=my_obs_dict, factor_dict = factors, num_of_possible_colors_for_agent = 3)
 
 env.reset()
 observation, reward, termination, truncation, info = env.last()

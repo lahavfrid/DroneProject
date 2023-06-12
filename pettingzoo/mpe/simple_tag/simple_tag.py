@@ -289,7 +289,9 @@ class Scenario(BaseScenario):
 
     def observation(self, agent, world, obs_radius = 2):
         # get positions of all entities in this agent's reference frame, if the entity is in the agents observation radius
-        agents_pos = [agent.state.lamp]
+        #if agent.name in world.dead_list:
+         #   return []
+        agents_pos = [agent.state.lamp, agent.adversary]
         obs_improvement_factor = 1.0
 
         # impair vision if inside of a landmark
@@ -300,6 +302,8 @@ class Scenario(BaseScenario):
 
         # get vision of all other agents in sight (landmark doesn't count as an agent)
         for other in world.agents:
+            if other == agent or world.dead_list[other.name]:
+                continue
             curr_obs_improvement_factor = obs_improvement_factor
             relative_distance = agent.state.p_pos - other.state.p_pos
 

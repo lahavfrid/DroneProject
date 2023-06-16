@@ -295,8 +295,22 @@ class SimpleEnv(AECEnv):
         ):
             self._was_dead_step(action)
             return
-        cur_agent = self.agent_selection
+
+        # Get the next agent, who isn't dead:
         current_idx = self._index_map[self.agent_selection]
+        actual_agent = self.world.agents[current_idx]
+        while actual_agent.name in self.world.dead_list and (self.world.dead_list[actual_agent.name]):
+            next_idx = (current_idx + 1) % self.num_agents
+            if next_idx == 0:
+                break
+
+            self.agent_selection = self._agent_selector.next()
+            current_idx = self._index_map[self.agent_selection]
+            actual_agent = self.world.agents[current_idx]
+
+
+        cur_agent = self.agent_selection
+
         next_idx = (current_idx + 1) % self.num_agents
         self.agent_selection = self._agent_selector.next()
 
@@ -344,7 +358,10 @@ class SimpleEnv(AECEnv):
         self.screen.fill((255, 255, 255))
 
         # update bounds to center around agent
-        all_poses = [entity.state.p_pos for entity in self.world.entities]
+        all_poses = []
+        for entity in self.world.entities:
+            if entity.name in self.world.dead_list and (not self.world.dead_list[entity.name]):
+                all_poses.append(entity.state.p_pos)
         cam_range = np.max(np.abs(np.array(all_poses)))
 
         # update geometry and text positions
@@ -368,18 +385,18 @@ class SimpleEnv(AECEnv):
             else:
                 curr_color = entity.color
             pygame.draw.circle(
-                self.screen, curr_color * 200, (x, y), entity.size * 350
+                self.screen, curr_color * 200, (x, y), entity.size * 350 * (1 / cam_range)
             )  # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
             pygame.draw.circle(
-                self.screen, (0, 0, 0), (x, y), entity.size * 350, 1
+                self.screen, (0, 0, 0), (x, y), entity.size * 350 * (1 / cam_range), 1
             )  # borders
             if entity.state.lamp:
                 pygame.draw.circle(
-                    self.screen, entity.color * 100, (x, y), entity.size * 100
+                    self.screen, entity.color * 100, (x, y), entity.size * 100 * (1 / cam_range)
                 )  # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
             if entity.state.height:
                 pygame.draw.circle(
-                    self.screen, entity.color * 50, (x, y), entity.size * 200, 1
+                    self.screen, entity.color * 50, (x, y), entity.size * 200 * (1 / cam_range), 1
                 )  # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
             assert (
                 0 < x < self.width and 0 < y < self.height

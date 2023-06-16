@@ -85,7 +85,7 @@ def greedyAgent(observation):
 #   we assume the remaining agents see all the map
 
 # Note: The radiuses values are in the range [0, 2]
-my_obs_dict = {1: 10, 0.001: 10}
+my_obs_dict = {2: 10, 1: 10}
 factors = {"height_other_factor": 1}
 env = simple_tag_v3.env(render_mode='human', num_good=10, num_adversaries=10, num_obstacles=1, max_cycles=1000,\
                         obs_dict=my_obs_dict, factor_dict = factors, num_of_possible_colors_for_agent = 3)

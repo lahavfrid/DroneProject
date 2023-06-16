@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-!git clone https://github.com/lahavfrid/DroneProject
 setup(
     name='YourPackageName',
     version='0.1',

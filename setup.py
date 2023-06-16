@@ -8,7 +8,7 @@ setup(
         'dependency1',
         'dependency2',
     ],
-    author='Your Name',
+    author='Roei krinitz, Lahav fridlend, Alon Spector',
     author_email='your@email.com',
     description='Description of your project',
     url='https://github.com/lahavfrid/DroneProject',

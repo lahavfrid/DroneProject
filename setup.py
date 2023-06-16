@@ -11,5 +11,5 @@ setup(
     author='Your Name',
     author_email='your@email.com',
     description='Description of your project',
-    url='https://github.com/your_username/your_project',
+    url='https://github.com/lahavfrid/DroneProject',
 )

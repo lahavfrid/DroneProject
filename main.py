@@ -27,7 +27,7 @@ from CustomAgents import *
 # Note: The radiuses values are in the range [0, 2]
 my_obs_dict = {20: 2, 0.00001: 1}
 
-# Factors dictionary that contains some factors used in the environment-- PROBLEM NEED TO FIX
+# Factors dictionary that contains some factors used in the environment -
 factors = {"height_other_factor": 1}
 
 # There are 2 ways to initialize the environment:

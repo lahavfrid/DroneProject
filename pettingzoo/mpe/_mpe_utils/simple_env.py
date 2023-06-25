@@ -369,7 +369,7 @@ class SimpleEnv(AECEnv):
         cam_range = np.max(np.abs(np.array(all_poses)))
 
         if self.render_object_shrinking:
-            relative_size_reduction = min( math.sqrt(cam_range), 12)
+            relative_size_reduction = min(math.sqrt(cam_range), 12)
         # 12 is a constant factor, so the objects won't disappear relative to the cam range
         else:
             relative_size_reduction = 1

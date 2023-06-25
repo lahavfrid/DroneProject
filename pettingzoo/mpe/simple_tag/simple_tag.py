@@ -1,4 +1,5 @@
 # noqa
+
 """
 # Simple Tag
 
@@ -61,7 +62,7 @@ simple_tag_v3.env(num_good=1, num_adversaries=3, num_obstacles=2, max_cycles=25,
 `continuous_actions`: Whether agent action spaces are discrete(default) or continuous
 
 """
-
+from pettingzoo.mpe.simple_tag.settings import *
 import numpy as np
 from gymnasium.utils import EzPickle
 
@@ -71,19 +72,20 @@ from pettingzoo.mpe._mpe_utils.simple_env import SimpleEnv, make_env
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
 
+
 class raw_env(SimpleEnv, EzPickle):
     def __init__(
-        self,
-        num_good=1,
-        num_adversaries=3,
-        num_obstacles=2,
-        max_cycles=25,
-        continuous_actions=False,
-        render_mode=None,
-        obs_dict=None,
-        factor_dict={},
-        num_of_possible_colors_for_agent=0,
-        render_object_shrinking = True,
+    self,
+    obs_dict=obs_dict,
+    render_mode =render_mode,
+    num_good = num_good,
+    num_adversaries = num_adversaries,
+    num_obstacles = num_obstacles,
+    max_cycles = max_cycles,
+    num_of_possible_colors_for_agent = num_of_possible_colors_for_agent,
+    render_object_shrinking = render_object_shrinking,
+    factor_dict = factor_dict,
+
     ):
         EzPickle.__init__(
             self,
@@ -91,7 +93,7 @@ class raw_env(SimpleEnv, EzPickle):
             num_adversaries=num_adversaries,
             num_obstacles=num_obstacles,
             max_cycles=max_cycles,
-            continuous_actions=continuous_actions,
+            continuous_actions=False,
             render_mode=render_mode,
         )
         scenario = Scenario()
@@ -104,7 +106,7 @@ class raw_env(SimpleEnv, EzPickle):
             world=world,
             render_mode=render_mode,
             max_cycles=max_cycles,
-            continuous_actions=continuous_actions,
+            continuous_actions=False,
             obs_dict=obs_dict,
             render_object_shrinking = render_object_shrinking,
         )

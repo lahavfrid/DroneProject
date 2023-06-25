@@ -83,6 +83,7 @@ class raw_env(SimpleEnv, EzPickle):
         obs_dict=None,
         factor_dict={},
         num_of_possible_colors_for_agent=0,
+        render_object_shrinking = True,
     ):
         EzPickle.__init__(
             self,
@@ -105,6 +106,7 @@ class raw_env(SimpleEnv, EzPickle):
             max_cycles=max_cycles,
             continuous_actions=continuous_actions,
             obs_dict=obs_dict,
+            render_object_shrinking = render_object_shrinking,
         )
         self.metadata["name"] = "simple_tag_v3"
 

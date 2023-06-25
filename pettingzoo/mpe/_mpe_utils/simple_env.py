@@ -1,3 +1,4 @@
+import math
 import os
 
 import gymnasium
@@ -43,6 +44,7 @@ class SimpleEnv(AECEnv):
         continuous_actions=False,
         local_ratio=None,
         obs_dict=None,
+        render_object_shrinking = True
     ):
         super().__init__()
 
@@ -77,6 +79,8 @@ class SimpleEnv(AECEnv):
         }
 
         self._agent_selector = agent_selector(self.agents)
+
+        self.render_object_shrinking = render_object_shrinking
 
         # set agents observation radiuses
         self.obs_radiuses = []
@@ -358,11 +362,17 @@ class SimpleEnv(AECEnv):
         self.screen.fill((255, 255, 255))
 
         # update bounds to center around agent
-        all_poses = []
+        all_poses = [(1,0)]
         for entity in self.world.entities:
             if entity.name in self.world.dead_list and (not self.world.dead_list[entity.name]):
                 all_poses.append(entity.state.p_pos)
         cam_range = np.max(np.abs(np.array(all_poses)))
+
+        if self.render_object_shrinking:
+            relative_size_reduction = min( math.sqrt(cam_range), 12)
+        # 12 is a constant factor, so the objects won't disappear relative to the cam range
+        else:
+            relative_size_reduction = 1
 
         # update geometry and text positions
         text_line = 0
@@ -385,18 +395,18 @@ class SimpleEnv(AECEnv):
             else:
                 curr_color = entity.color
             pygame.draw.circle(
-                self.screen, curr_color * 200, (x, y), entity.size * 350 * (1 / cam_range)
+                self.screen, curr_color * 200, (x, y), entity.size * 350 * (1 / relative_size_reduction)
             )  # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
             pygame.draw.circle(
-                self.screen, (0, 0, 0), (x, y), entity.size * 350 * (1 / cam_range), 1
+                self.screen, (0, 0, 0), (x, y), entity.size * 350 * (1 / relative_size_reduction), 1
             )  # borders
             if entity.state.lamp:
                 pygame.draw.circle(
-                    self.screen, entity.color * 100, (x, y), entity.size * 100 * (1 / cam_range)
+                    self.screen, entity.color * 100, (x, y), entity.size * 100 * (1 / relative_size_reduction)
                 )  # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
             if entity.state.height:
                 pygame.draw.circle(
-                    self.screen, entity.color * 50, (x, y), entity.size * 200 * (1 / cam_range), 1
+                    self.screen, entity.color * 50, (x, y), entity.size * 200 * (1 / relative_size_reduction), 1
                 )  # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
             assert (
                 0 < x < self.width and 0 < y < self.height
@@ -426,5 +436,5 @@ class SimpleEnv(AECEnv):
     def close(self):
         if self.renderOn:
             pygame.event.pump()
-            pygame.display.quit()
+            #pygame.display.quit()
             self.renderOn = False

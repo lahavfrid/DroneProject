@@ -302,15 +302,15 @@ class SimpleEnv(AECEnv):
 
         # Get the next agent, who isn't dead:
         current_idx = self._index_map[self.agent_selection]
-        actual_agent = self.world.agents[current_idx]
-        while actual_agent.name in self.world.dead_list and (self.world.dead_list[actual_agent.name]):
-            next_idx = (current_idx + 1) % self.num_agents
-            if next_idx == 0:
-                break
-
-            self.agent_selection = self._agent_selector.next()
-            current_idx = self._index_map[self.agent_selection]
-            actual_agent = self.world.agents[current_idx]
+        # actual_agent = self.world.agents[current_idx]
+        # while actual_agent.name in self.world.dead_list and (self.world.dead_list[actual_agent.name]):
+        #     next_idx = (current_idx + 1) % self.num_agents
+        #     if next_idx == 0:
+        #         break
+        #
+        #     self.agent_selection = self._agent_selector.next()
+        #     current_idx = self._index_map[self.agent_selection]
+        #     actual_agent = self.world.agents[current_idx]
 
 
         cur_agent = self.agent_selection

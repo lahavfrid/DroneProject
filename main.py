@@ -7,7 +7,7 @@ from CustomAgents import *
 #   we assume the remaining agents see all the map
 
 # Note: The radiuses values are in the range [0, 2]
-my_obs_dict = {20: 2, 0.00001: 1}
+my_obs_dict = {float('inf'): 100, 0.00001: 1}
 factors = {"height_other_factor": 1}
 env = simple_tag_v3.env(render_mode='human', num_good=5, num_adversaries=5, num_obstacles=0, max_cycles=1000,\
                         obs_dict=my_obs_dict, factor_dict = factors, num_of_possible_colors_for_agent = 3)
@@ -23,8 +23,8 @@ for agent in env.agent_iter():
         action = None
     else:
         if observation[1]==False:
-            action = smart_green_agent((observation),env,agent)
-            #action = env.action_space(agent).sample()
+            #action = smart_green_agent((observation),env,agent)
+            action = env.action_space(agent).sample()
 
         else:
             #action = env.action_space(agent).sample()

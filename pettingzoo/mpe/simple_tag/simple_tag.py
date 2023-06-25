@@ -294,8 +294,8 @@ class Scenario(BaseScenario):
     def observation(self, agent, world, obs_radius = 2):
         # get positions of all entities in this agent's reference frame, if the entity is in the agents observation radius
 
-        #if (agent.name in world.dead_list) and (world.dead_list[agent.name]):
-        #     return []
+        if (agent.name in world.dead_list) and (world.dead_list[agent.name]):
+             return [None, None]
 
         agents_pos = [agent.state.lamp, agent.adversary]
         obs_improvement_factor = 1.0

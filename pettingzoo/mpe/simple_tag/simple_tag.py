@@ -84,7 +84,7 @@ class raw_env(SimpleEnv, EzPickle):
     max_cycles = max_cycles,
     num_of_possible_colors_for_agent = num_of_possible_colors_for_agent,
     render_object_shrinking = render_object_shrinking,
-    factor_dict = factor_dict,
+    factor_dict = {},
 
     ):
         EzPickle.__init__(
@@ -118,17 +118,17 @@ parallel_env = parallel_wrapper_fn(env)
 
 def factor_dict_reset(factor_dict):
     if not ("landmark_interference_factor" in factor_dict):
-        factor_dict["landmark_interference_factor"] = 1.0
+        factor_dict["landmark_interference_factor"] = factor_dict_default["landmark_interference_factor"]
     if not ("lamp_improvement_factor" in factor_dict):
-        factor_dict["lamp_improvement_factor"] = 1.0
+        factor_dict["lamp_improvement_factor"] = factor_dict_default["lamp_improvement_factor"]
     if not ("shadow_interference_factor" in factor_dict):
-        factor_dict["shadow_interference_factor"] = 1.0
+        factor_dict["shadow_interference_factor"] = factor_dict_default["shadow_interference_factor"]
     if not ("height_adversary_factor" in factor_dict):
-        factor_dict["height_adversary_factor"] = 1.0
+        factor_dict["height_adversary_factor"] = factor_dict_default["height_adversary_factor"]
     if not ("height_non_adversary_factor" in factor_dict):
-        factor_dict["height_non_adversary_factor"] = 1.0
+        factor_dict["height_non_adversary_factor"] = factor_dict_default["height_non_adversary_factor"]
     if not ("height_other_factor" in factor_dict):
-        factor_dict["height_other_factor"] = 1.0
+        factor_dict["height_other_factor"] = factor_dict_default["height_other_factor"]
     return factor_dict
 
 class Scenario(BaseScenario):
@@ -294,8 +294,8 @@ class Scenario(BaseScenario):
     def observation(self, agent, world, obs_radius = 2):
         # get positions of all entities in this agent's reference frame, if the entity is in the agents observation radius
 
-        if (agent.name in world.dead_list) and (world.dead_list[agent.name]):
-             return [None, None]
+        #if (agent.name in world.dead_list) and (world.dead_list[agent.name]):
+        #     return []
 
         agents_pos = [agent.state.lamp, agent.adversary]
         obs_improvement_factor = 1.0

@@ -66,9 +66,9 @@ class Entity:  # properties and state of physical world entity
 
 
 class Landmark(Entity):  # properties of landmark entities
-    def __init__(self):
+    def __init__(self,colide_flag=False):
         super().__init__()
-        self.collide = False
+        self.collide = colide_flag
 
 
 class Agent(Entity):  # properties of agent entities
@@ -116,8 +116,13 @@ class World:  # multi-agent world
         self.contact_margin = 1e-3
         self.factor_dict = {}
         self.num_of_possible_colors_for_agent = 1
-        self.colors_for_agent = [np.array([0.85, 0.35, 0.35]), np.array([0.85, 0.85, 0.0]), np.array([0.0, 0.85, 0.85]),
-                                 np.array([0.85, 0.0, 0.85]), np.array([0.85, 0.85, 0.85])]
+        self.colors_for_agent = [np.array([1, 0.388, 0.278]), np.array([0.941, 0.502, 0.502]), np.array([0.863, 0.078, 0.235]),
+                                 np.array([0.804, 0.361, 0.361]), np.array([0.698, 0.133, 0.133])]
+        self.lamp_flag = False
+        self.height_flag = False
+        self.landmark_colide= False
+        self.action_dict={}
+
 
     # return all entities in the world
     @property
@@ -180,6 +185,16 @@ class World:  # multi-agent world
             if agent.movable:
                 color_changes[i] = agent.action.color_change
         return color_changes
+
+    def lamp_action_dic(self, agent):
+        agent.action.lamp_change = True
+
+    def height_action_dic(self, agent):
+        agent.action.height_change = True
+
+    def color_action_dic(self, agent):
+        agent.action.color_change = True
+
 
     # gather agent action forces
     def apply_action_force(self, p_force):

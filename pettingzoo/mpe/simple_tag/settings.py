@@ -8,15 +8,17 @@
 #   we ignore the last radiuses in the dict.
 # If the total number of agent in obs_dict is smaller than the number of good agents -
 #   we assume the remaining agents see in a radius of 2.
-obs_dict = {0: 10, 0.00001: 1}
+obs_dict = {100: 10, 0.00001: 1}
 
-render_mode='human' #Run without rendering using "rgb_array" insted of "human".
+render_mode='human' #Run without rendering using "rgb_array" instead of "human".
 num_good=0          #Number of green agents
 num_adversaries=1   #Number of red agents
 num_obstacles=1     #Number of shadowed fields
 max_cycles=1000     #Number of cycles for the simulation
 num_of_possible_colors_for_agent = 3
 render_object_shrinking = True  #Allow rendering to shrink when agents are out of bounds.
+lamp_flag=True
+height_flag=True
 
 factor_dict_default = {} #  The default factor for each parameter is 1
                          #  The factors are multiplied by the observation radius, so it's recommended

@@ -85,6 +85,9 @@ class raw_env(SimpleEnv, EzPickle):
     num_of_possible_colors_for_agent = num_of_possible_colors_for_agent,
     render_object_shrinking = render_object_shrinking,
     factor_dict = {},
+    lamp_flag=False,
+    height_flag=False,
+    landmark_colide = False
 
     ):
         EzPickle.__init__(
@@ -99,7 +102,7 @@ class raw_env(SimpleEnv, EzPickle):
         scenario = Scenario()
         factor_dict = factor_dict_reset(factor_dict)
         world = scenario.make_world(num_good, num_adversaries, num_obstacles,
-                                    factor_dict, num_of_possible_colors_for_agent)
+                                    factor_dict, num_of_possible_colors_for_agent,lamp_flag,height_flag,landmark_colide)
         SimpleEnv.__init__(
             self,
             scenario=scenario,
@@ -133,7 +136,7 @@ def factor_dict_reset(factor_dict):
 
 class Scenario(BaseScenario):
     def make_world(self, num_good=1, num_adversaries=3, num_obstacles=2,
-                   factor_dict = {}, num_of_possible_colors_for_agent=0):
+                   factor_dict = {}, num_of_possible_colors_for_agent=0,lamp_flag=False,height_flag=False,landmark_colide=False):
         world = World()
         # set any world properties first
         world.factor_dict = factor_dict
@@ -147,6 +150,8 @@ class Scenario(BaseScenario):
         num_adversaries = num_adversaries
         num_agents = num_adversaries + num_good_agents
         num_landmarks = num_obstacles
+        world.lamp_flag = lamp_flag
+        world.height_flag = height_flag
         # add agents
         world.agents = [Agent() for i in range(num_agents)]
         world.dead_list = {agent.name: False for agent in world.agents}
@@ -162,13 +167,25 @@ class Scenario(BaseScenario):
             agent.accel = 3.0 if agent.adversary else 4.0
             agent.max_speed = 1.0 if agent.adversary else 1.3
         # add landmarks
-        world.landmarks = [Landmark() for i in range(num_landmarks)]
+        world.landmark_colide = landmark_colide
+        world.landmarks = [Landmark(world.landmark_colide) for i in range(num_landmarks)]
         for i, landmark in enumerate(world.landmarks):
             landmark.name = "landmark %d" % i
-            landmark.collide = True
+
             landmark.movable = False
             landmark.size = 0.2
             landmark.boundary = False
+
+        action_counter=5
+        if world.lamp_flag:
+            world.action_dict[action_counter]=world.lamp_action_dic
+            action_counter+=1
+        if world.height_flag:
+            world.action_dict[action_counter]=world.height_action_dic
+            action_counter+=1
+        if world.num_of_possible_colors_for_agent > 1:
+            world.action_dict[action_counter]=world.color_action_dic
+
         return world
 
     def reset_world(self, world, np_random):
@@ -250,6 +267,7 @@ class Scenario(BaseScenario):
                 if self.is_collision(a, agent):
                     rew -= 10
 
+
         # agents are penalized for exiting the screen, so that they can be caught by the adversaries
         def bound(x):
             if x < 0.9:
@@ -297,7 +315,7 @@ class Scenario(BaseScenario):
         #if (agent.name in world.dead_list) and (world.dead_list[agent.name]):
         #     return []
 
-        agents_pos = [agent.state.lamp, agent.adversary]
+        agents_pos = [agent.state.lamp, agent.adversary,agent.state.color_index]
         obs_improvement_factor = 1.0
 
         # impair vision if inside of a landmark
@@ -330,7 +348,7 @@ class Scenario(BaseScenario):
 
 
             if np.linalg.norm(relative_distance) <= obs_radius * curr_obs_improvement_factor:
-                agents_pos.append((other.adversary, relative_distance))
+                agents_pos.append((other.adversary, relative_distance,other.state.color_index))
 
 
         return agents_pos

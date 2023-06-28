@@ -78,3 +78,12 @@ def greedyAgent(observation,env,agent):
     if found_enemy == False:
         action = env.action_space(agent).sample()
     return action
+
+
+def randomAgent(observation,env,agent):
+    return env.action_space(agent).sample()
+
+
+def staticAgent(observation,env,agent):
+    return 0
+

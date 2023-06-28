@@ -1,5 +1,7 @@
 # Importing the CustomAgents module
 from CustomAgents import *
+from Auxiliry import *
+
 
 # The simulator is a drone environment simulation where there are enemies represented as green circles
 # and drones represented as red circles. It aims to create an interactive environment where drones and
@@ -47,12 +49,15 @@ env = simple_tag_v3.env()
 env = simple_tag_v3.env(
     render_mode='human',
     num_good=5,
-    num_adversaries=5,
-    num_obstacles=0,
+    num_adversaries=10,
+    num_obstacles=1,
     max_cycles=1000,
     obs_dict=my_obs_dict,
     factor_dict=factors,
-    num_of_possible_colors_for_agent=3
+    num_of_possible_colors_for_agent=3,
+    lamp_flag=True,
+    height_flag=True,
+    landmark_colide=False,
 )
 
 
@@ -62,26 +67,7 @@ observation, reward, termination, truncation, info = env.last()
 
 # The observation is a list of positions the first agent can observe (according to the radius).
 
-# Loop through each agent in the environment
-for agent in env.agent_iter():
-    observation, reward, termination, truncation, info = env.last()
-
-    # Print the observation
-    print(observation)
-
-    # Check if the episode is terminated or truncated
-    if termination or truncation:
-        action = None
-    else:
-        # If the agent is not a red agent, choose action using smart_green_agent
-        if observation[1] == False:
-            action = smart_green_agent(observation, env, agent)
-        else:
-            # If the agent is in a specific state, choose action using greedyAgent
-            action = greedyAgent(observation, env, agent)
-
-    # Perform the chosen action in the environment
-    env.step(action)
+run_env(env,randomAgent,randomAgent)
 
 # Close the environment
 env.close()

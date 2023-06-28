@@ -78,6 +78,7 @@ class SimpleEnv(AECEnv):
             agent.name: idx for idx, agent in enumerate(self.world.agents)
         }
 
+
         self._agent_selector = agent_selector(self.agents)
 
         self.render_object_shrinking = render_object_shrinking
@@ -103,7 +104,10 @@ class SimpleEnv(AECEnv):
         state_dim = 0
         for agent in self.world.agents:
             if agent.movable:
-                space_dim = self.world.dim_p * 2 + 4    # updated from +1 to +4 (for lamp, height and color action)
+                space_dim = self.world.dim_p * 2 + (self.world.lamp_flag+self.world.height_flag+1)    # updated from +1 to +4 (for lamp, height and color action)
+                if self.world.num_of_possible_colors_for_agent > 1:
+                    space_dim += 1
+
             elif self.continuous_actions:
                 space_dim = 0
             else:
@@ -194,7 +198,9 @@ class SimpleEnv(AECEnv):
             action = self.current_actions[i]
             scenario_action = []
             if agent.movable:
-                mdim = self.world.dim_p * 2 + 4    # updated from +1 to +4 (for lamp, height and color action)
+                mdim = self.world.dim_p * 2 + (self.world.lamp_flag + self.world.height_flag+1)  # updated from +1 to +4 (for lamp, height and color action)
+                if self.world.num_of_possible_colors_for_agent > 1:
+                    mdim += 1
                 if self.continuous_actions:
                     scenario_action.append(action[0:mdim])
                     action = action[mdim:]
@@ -270,12 +276,8 @@ class SimpleEnv(AECEnv):
                     agent.action.u[1] = -1.0
                 if action[0] == 4:
                     agent.action.u[1] = +1.0
-                if action[0] == 5 and agent.adversary:
-                    agent.action.lamp_change = True
-                if action[0] == 6 and agent.adversary:
-                    agent.action.height_change = True
-                if action[0] == 7 and agent.adversary:
-                    agent.action.color_change = True
+                if action[0] in self.world.action_dict and agent.adversary:
+                    self.world.action_dict[action[0]](agent)
             sensitivity = 5.0
             if agent.accel is not None:
                 sensitivity = agent.accel
@@ -376,7 +378,7 @@ class SimpleEnv(AECEnv):
 
         # update geometry and text positions
         text_line = 0
-        for e, entity in enumerate(self.world.entities):
+        for e, entity in enumerate(reversed(self.world.entities)):
             if entity.name in self.world.dead_list and self.world.dead_list[entity.name]:
                 continue
             # geometry
@@ -402,12 +404,12 @@ class SimpleEnv(AECEnv):
             )  # borders
             if entity.state.lamp:
                 pygame.draw.circle(
-                    self.screen, entity.color * 100, (x, y), entity.size * 100 * (1 / relative_size_reduction)
+                    self.screen, (0, 0, 0), (x, y), entity.size * 450 * (1 / relative_size_reduction),1
                 )  # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
             if entity.state.height:
                 pygame.draw.circle(
-                    self.screen, entity.color * 50, (x, y), entity.size * 200 * (1 / relative_size_reduction), 1
-                )  # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
+                    self.screen, entity.color * 100, (x, y), entity.size * 100 * (1 / relative_size_reduction)
+                ) # 350 is an arbitrary scale factor to get pygame to render similar sizes as pyglet
             assert (
                 0 < x < self.width and 0 < y < self.height
             ), f"Coordinates {(x, y)} are out of bounds."

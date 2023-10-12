@@ -2,24 +2,6 @@
 from CustomAgents import *
 from Auxiliry import *
 
-
-# The simulator is a drone environment simulation where there are enemies represented as green circles
-# and drones represented as red circles. It aims to create an interactive environment where drones and
-# enemies can navigate, interact, and potentially engage in strategic behaviors.
-# The drones and enemies can move in various directions within the environment, allowing for dynamic
-# movement patterns and interactions.
-# The drones have additional capabilities, such as the ability to change colors and reach higher ground,
-# providing them with increased versatility and strategic options.
-# In addition to the drones and enemies, the environment features shadow zones, which are areas where both
-# drones and enemies can enter. These shadow zones introduce an additional element to the simulation and
-# can potentially affect the behavior and interactions of the entities within them.
-# Overall, the simulator aims to provide a realistic and immersive simulation of a drone-based scenario,
-# allowing for the exploration and analysis of various drone and enemy interactions within the simulated
-# environment.
-
-
-
-
 # obs_dict: A dictionary of (key=radius, value=num_of_agents_with_radius).
 # If the total number of agent in obs_dict is greater than the number of good agents -
 #   we ignore the last radiuses in the dict.
@@ -27,10 +9,8 @@ from Auxiliry import *
 #   we assume the remaining agents see all the map
 
 # Note: The radiuses values are in the range [0, 2]
-my_obs_dict = {20: 2, 0.00001: 1}
 
 # Factors dictionary that contains some factors used in the environment -
-factors = {"height_other_factor": 1}
 
 # There are 2 ways to initialize the environment:
 
@@ -48,26 +28,62 @@ env = simple_tag_v3.env()
 
 env = simple_tag_v3.env(
     render_mode='human',
-    num_good=5,
-    num_adversaries=10,
+    num_drones=2,
+    num_parasites=2,
     num_obstacles=1,
-    max_cycles=1000,
-    obs_dict=my_obs_dict,
-    factor_dict=factors,
-    num_of_possible_colors_for_agent=3,
+    max_cycles=10000,
+    num_of_possible_colors_for_agent=4,
     lamp_flag=True,
     height_flag=True,
     landmark_colide=False,
-)
+    no_dead_flag=True,
+    max_hit_drone=2,
+    max_hit_parasite=1,
+    render_object_shrinking = False,
+    out_of_bounds_reward=False
 
+
+)
+'''
+env = simple_tag_v3.single_env(
+    parasite_policy = staticAgent,
+    drone_policy = staticAgent,
+    render_mode='human',
+    num_drones=5,
+    num_parasites=5,
+    num_obstacles=1,
+    max_cycles=1000,
+    num_of_possible_colors_for_agent=4,
+    lamp_flag=True,
+    height_flag=True,
+    landmark_colide=False,
+    no_dead_flag=False,
+    max_hit_drone=1,
+    max_hit_parasite=1,
+    render_object_shrinking = False,
+    out_of_bounds_reward=False
+
+)
+'''
+# Prints the actions the agent can perform
+print_action_dict(env)
 
 # Reset the environment and get initial observation, reward, termination, truncation, and info
 env.reset()
 observation, reward, termination, truncation, info = env.last()
 
-# The observation is a list of positions the first agent can observe (according to the radius).
+# user_input = 0
+# while user_input!='Q' and user_input!="q":
+#     env.step(int(user_input))
+#     print(env.observe())
+#     user_input = input()
 
-run_env(env,randomAgent,randomAgent)
+policy_dic={}
+policy_dic["adversary_0"]=staticAgent
+policy_dic["adversary_1"]=chaseParasiteAgent
+policy_dic["agent_1"]=escapeFromDronesAgent
+
+run_env_multi_policy(env, policy_dic)
 
 # Close the environment
 env.close()
@@ -75,5 +91,3 @@ env.close()
 # Reset the environment and get initial observation, reward, termination, truncation, and info
 env.reset()
 observation, reward, termination, truncation, info = env.last()
-
-# The observation is a list of positions the first agent can observe (according to the radius).

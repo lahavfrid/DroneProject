@@ -1,13 +1,13 @@
 from pettingzoo.mpe import simple_tag_v3
 import numpy as np
 
-def smart_green_agent(observation, env,agent):
+def escapeFromDronesAgent(observation, env,agent):
     min_agent_norm = float('inf')
     min_agent_loc = [0, 0]
     action = env.action_space(agent).sample()  # this is where you would insert your policy
     found_enemy = False
-    for item in observation[2:]:
-        target_adversery, target_location = item
+    for item in observation[4:]:
+        target_adversery, target_location, target_color = item
         if target_adversery:
             found_enemy = True
             if np.linalg.norm(target_location) < min_agent_norm:
@@ -27,13 +27,13 @@ def smart_green_agent(observation, env,agent):
         action = env.action_space(agent).sample()
     return action
 
-def stupidAgent(observation, env,agent):
+def escapeFromParastieAgent(observation, env,agent):
     min_agent_norm = float('inf')
     min_agent_loc = [0, 0]
     action = env.action_space(agent).sample()  # this is where you would insert your policy
     found_enemy = False
-    for item in observation[2:]:
-        target_adversery, target_location = item
+    for item in observation[4:]:
+        target_adversery, target_location, target_color = item
         if not target_adversery:
             found_enemy = True
             if np.linalg.norm(target_location) < min_agent_norm:
@@ -53,13 +53,13 @@ def stupidAgent(observation, env,agent):
         action = env.action_space(agent).sample()
     return action
 
-def greedyAgent(observation,env,agent):
+def chaseParasiteAgent(observation,env,agent):
     min_agent_norm = float('inf')
     min_agent_loc = [0, 0]
     action = env.action_space(agent).sample()  # this is where you would insert your policy
     found_enemy = False
-    for item in observation[2:]:
-        target_adversery, target_location = item
+    for item in observation[4:]:
+        target_adversery, target_location, target_color = item
         if not target_adversery:
             found_enemy = True
             if np.linalg.norm(target_location) < min_agent_norm:
